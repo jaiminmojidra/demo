@@ -2,7 +2,6 @@ package com.demo.customerapi.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.Period;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
@@ -13,10 +12,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.demo.customerapi.controller.CustomerController;
+import com.demo.customerapi.dto.CustomerRequest;
+import com.demo.customerapi.exception.CustomerNotFoundException;
 import com.demo.customerapi.model.Customer;
 import com.demo.customerapi.repository.CustomerRepository;
-
 @Service
 public class CustomerServiceImpl implements CustomerService {
 
@@ -24,16 +23,21 @@ public class CustomerServiceImpl implements CustomerService {
 	
 	@Autowired
 	CustomerRepository customerRepository;
-	
-	@Override
-	public Customer createCustomer(Customer customer) {
-		customer.setId(null);
-		return customerRepository.save(customer);
-	}
 
 	@Override
+	public Customer createCustomer(CustomerRequest customer) {
+		Customer createCustomer = new Customer();
+		createCustomer.setName(customer.getName());
+		createCustomer.setEmail(customer.getEmail());
+		createCustomer.setAnnualSpend(customer.getAnnualSpend());
+		createCustomer.setLastPurchaseDate(customer.getLastPurchaseDate());
+		return customerRepository.save(createCustomer);
+	}
+	
+	@Override
 	public Optional<Customer> getCustomerById(UUID id) {
-		Optional<Customer> customers = customerRepository.findById(id);
+		Optional<Customer> customers = Optional.ofNullable(customerRepository.findById(id)
+				.orElseThrow(() -> new CustomerNotFoundException("Customer with ID " + id + " not found.")));
 		customers.map(customer -> {
 			String tier = this.getTier(customer);
 			customer.setTier(tier);
@@ -46,6 +50,9 @@ public class CustomerServiceImpl implements CustomerService {
 	public List<Customer> getCustomerByName(String name) {
 		List<Customer> customers = customerRepository.findByNameContainingIgnoreCase(name);
 		logger.info("Customer found : ", customers);
+		if(customers.isEmpty()) {
+			throw new CustomerNotFoundException("No customers found with name: " + name);
+		}
 		customers.forEach(customer -> {
 			String tier = this.getTier(customer);
 			customer.setTier(tier);
@@ -56,7 +63,8 @@ public class CustomerServiceImpl implements CustomerService {
 
 	@Override
 	public Optional<Customer> getCustomerByEmail(String email) {
-		Optional<Customer> customers = customerRepository.findByEmail(email);
+		Optional<Customer> customers = Optional.ofNullable(customerRepository.findByEmail(email)
+				.orElseThrow(() -> new CustomerNotFoundException("Customer with Email " + email + " not found.")));
 		customers.map(customer -> {
 			String tier = this.getTier(customer);
 			customer.setTier(tier);
@@ -83,6 +91,9 @@ public class CustomerServiceImpl implements CustomerService {
 
 	@Override
 	public void deleteCustomer(UUID id) {
+		if(!customerRepository.existsById(id)) {
+			throw new RuntimeException("Cannot delete. Customer with ID " + id + " not found.");
+		}
 		customerRepository.deleteById(id);
 	}
 	

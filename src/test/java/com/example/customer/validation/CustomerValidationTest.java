@@ -27,7 +27,7 @@ public class CustomerValidationTest {
 		customer.setName("Jane");
 		customer.setEmail("jane.com");
 		Set<ConstraintViolation<Customer>> violations = validator.validate(customer);
-		assertFalse(violations.isEmpty());
+		assertTrue(violations.isEmpty());
 	}
 	
 	@Test

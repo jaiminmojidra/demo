@@ -15,7 +15,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.demo.customerapi.CustomerManagementApiApplication;
-import com.demo.customerapi.dto.CreateCustomerRequest;
+import com.demo.customerapi.dto.CustomerRequest;
+import com.demo.customerapi.dto.CustomerResponse;
 import com.demo.customerapi.model.Customer;
 import com.demo.customerapi.service.CustomerService;
 
@@ -42,17 +43,18 @@ public class CustomerController {
 	
     // Used CreateCustomerRequest for validating and ensuring only required input is taken by the API
 	@PostMapping
-	@Operation(summary = "Create a new customer", description = "Creates a new customer with given information.")
-	public ResponseEntity<Customer> createCustomer(@Valid @RequestBody CreateCustomerRequest customer){
+	@Operation(summary = "Create a new customer", description = "Creates a new customer. Name and Email are required")
+	public ResponseEntity<CustomerResponse> createCustomer(@Valid @RequestBody CustomerRequest customer){
 		logger.info("Create customer request body: {}", customer);
-		Customer tempCustomer = new Customer();
-		tempCustomer.setName(customer.getName());
-		tempCustomer.setEmail(customer.getEmail());
-		tempCustomer.setAnnualSpend(customer.getAnnualSpend());
-		tempCustomer.setLastPurchaseDate(customer.getLastPurchaseDate());
+		CustomerResponse newCustomer = new CustomerResponse();
+		Customer tempCustomer = customerService.createCustomer(customer);
 		logger.info("TempCustomer request body: {}", tempCustomer);
-		Customer newCustomer = customerService.createCustomer(tempCustomer);
-		logger.info("New customer request body: {}", customer);
+		newCustomer.setId(tempCustomer.getId());
+		newCustomer.setName(tempCustomer.getName());
+		newCustomer.setEmail(tempCustomer.getEmail());
+		newCustomer.setAnnualSpend(tempCustomer.getAnnualSpend());
+		newCustomer.setLastPurchaseDate(tempCustomer.getLastPurchaseDate());
+		logger.info("New customer request body: {}", tempCustomer);
 		return ResponseEntity.ok(newCustomer);
 	}
 	
@@ -70,7 +72,7 @@ public class CustomerController {
 	}
 	
 	@GetMapping(params = "email")
-	@Operation(summary = "Get list of customers", description = "Gets a list of customers by Email.")
+	@Operation(summary = "Get a customer", description = "Gets a customer by Email.")
 	public ResponseEntity<Customer> getCustomerByEmail(@RequestParam String email){
 		return customerService.getCustomerByEmail(email).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
 	}
@@ -78,11 +80,17 @@ public class CustomerController {
 	// id given in url as path variable is considered and will be ignored if sent in the request body
 	@PutMapping("/{id}")
 	@Operation(summary = "Update a customer", description = "Update a customer based on id and the information in the request.")
-	public ResponseEntity<Customer> updateCustomer(@PathVariable UUID id, @Valid @RequestBody Customer customer) {
+	public ResponseEntity<CustomerResponse> updateCustomer(@PathVariable UUID id, @Valid @RequestBody Customer customer) {
 		logger.info("update customer request body: {}", customer);
 		try {
-			Customer newCustomer = customerService.updateCustomer(id, customer);
-			logger.info("newCustomer request body: {}", newCustomer);
+			CustomerResponse newCustomer = new CustomerResponse();
+			Customer tempCustomer = customerService.updateCustomer(id, customer);
+			newCustomer.setId(tempCustomer.getId());
+			newCustomer.setName(tempCustomer.getName());
+			newCustomer.setEmail(tempCustomer.getEmail());
+			newCustomer.setAnnualSpend(tempCustomer.getAnnualSpend());
+			newCustomer.setLastPurchaseDate(tempCustomer.getLastPurchaseDate());
+			logger.info("newCustomer response body: {}", newCustomer);
 			return ResponseEntity.ok(newCustomer);
 		} catch (RuntimeException e) {
 			return ResponseEntity.notFound().build();

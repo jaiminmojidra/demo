@@ -4,11 +4,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.demo.customerapi.dto.CustomerRequest;
 import com.demo.customerapi.model.Customer;
 
 public interface CustomerService {
 	
-	Customer createCustomer(Customer customer);
+	Customer createCustomer(CustomerRequest customer);
 	
 	Optional<Customer> getCustomerById(UUID id);
 	
