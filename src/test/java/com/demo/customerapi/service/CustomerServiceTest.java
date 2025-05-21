@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
@@ -22,6 +23,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import com.demo.customerapi.dto.CustomerRequest;
+import com.demo.customerapi.exception.CustomerNotFoundException;
 import com.demo.customerapi.model.Customer;
 import com.demo.customerapi.repository.CustomerRepository;
 
@@ -98,7 +100,7 @@ public class CustomerServiceTest {
 	void testDeleteCustomerById() {
 		UUID id = UUID.randomUUID();
 		doNothing().when(customerRepository).deleteById(id);
-		assertDoesNotThrow(() -> customerService.deleteCustomer(id));
+		assertThrows(RuntimeException.class, () -> customerService.deleteCustomer(id));
 	}
 	
 	@Test
