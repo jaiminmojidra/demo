@@ -80,11 +80,17 @@ public class CustomerController {
 	// id given in url as path variable is considered and will be ignored if sent in the request body
 	@PutMapping("/{id}")
 	@Operation(summary = "Update a customer", description = "Update a customer based on id and the information in the request.")
-	public ResponseEntity<CustomerResponse> updateCustomer(@PathVariable UUID id, @Valid @RequestBody Customer customer) {
+	public ResponseEntity<CustomerResponse> updateCustomer(@PathVariable UUID id, @Valid @RequestBody CustomerRequest customer) {
 		logger.info("update customer request body: {}", customer);
 		try {
+			Customer requestCustomer = new Customer();
+			requestCustomer.setName(customer.getName());
+			requestCustomer.setEmail(customer.getEmail());
+			requestCustomer.setAnnualSpend(customer.getAnnualSpend());
+			requestCustomer.setLastPurchaseDate(customer.getLastPurchaseDate());
+			
+			Customer tempCustomer = customerService.updateCustomer(id, requestCustomer);
 			CustomerResponse newCustomer = new CustomerResponse();
-			Customer tempCustomer = customerService.updateCustomer(id, customer);
 			newCustomer.setId(tempCustomer.getId());
 			newCustomer.setName(tempCustomer.getName());
 			newCustomer.setEmail(tempCustomer.getEmail());
